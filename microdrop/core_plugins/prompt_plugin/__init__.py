@@ -73,7 +73,7 @@ class SchemaView(FormView):
         self.validate()
 
     def as_dict(self):
-        return expand_items(flatten_form(self.form.schema).items())
+        return expand_items(list(flatten_form(self.form.schema).items()))
 
     def validate(self):
         data_dict = self.as_dict()
@@ -83,7 +83,7 @@ class SchemaView(FormView):
         # Light red color.
         light_red = gtk.gdk.Color(240 / 255., 126 / 255., 110 / 255.)
 
-        for name_i, field_i in self.form.fields.iteritems():
+        for name_i, field_i in list(self.form.fields.items()):
             color_i = light_red if name_i in errors else None
             label_widget_i = (field_i.widget
                               .get_data('pygtkhelpers::label_widget'))
@@ -91,7 +91,7 @@ class SchemaView(FormView):
 
         if errors:
             message = '\n'.join(['[{}] {}'.format(name, error.message)
-                                 for name, error in errors.iteritems()])
+                                 for name, error in list(errors.items())])
             self.label_event_box.modify_bg(gtk.STATE_NORMAL, light_red)
             self.label_error.set_markup(message)
             self.vbox_errors.show()
@@ -174,7 +174,7 @@ def ignorable_warning(**kwargs):
     dialog = gtk.MessageDialog(buttons=gtk.BUTTONS_YES_NO,
                                type=gtk.MESSAGE_WARNING)
 
-    for k, v in kwargs.items():
+    for k, v in list(kwargs.items()):
         setattr(dialog.props, k, v)
 
     content_area = dialog.get_content_area()

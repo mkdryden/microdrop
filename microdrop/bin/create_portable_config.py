@@ -65,8 +65,8 @@ def main(output_dir):
                                        config_path=config_path.abspath())
         output.write(launcher_str)
 
-    print 'Start MicroDrop with the following:'
-    print '\n    %s' % launcher_path.abspath()
+    print('Start MicroDrop with the following:')
+    print(('\n    %s' % launcher_path.abspath()))
 
 
 if __name__ == '__main__':

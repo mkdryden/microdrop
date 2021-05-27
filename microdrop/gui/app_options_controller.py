@@ -51,8 +51,8 @@ class AppOptionsController:
         observers = ExtensionPoint(IPlugin)
         service = observers.service(plugin_name)
         if not hasattr(service, 'get_app_values'):
-            values = dict([(k, v.value) for k, v in self.forms[plugin_name]
-                           .from_defaults().iteritems()])
+            values = dict([(k, v.value) for k, v in list(self.forms[plugin_name]
+                           .from_defaults().items())])
         else:
             values = service.get_app_values()
         if not values:
@@ -79,7 +79,7 @@ class AppOptionsController:
         self.clear_form()
         app = get_app()
         self.no_gui_names = set()
-        for name, form in self.forms.iteritems():
+        for name, form in list(self.forms.items()):
             # For each form, generate a pygtkhelpers formview and append the
             # view onto the end of the plugin vbox
 
@@ -105,7 +105,7 @@ class AppOptionsController:
                 expander.set_expanded(True)
                 expander.add(self.form_views[name].widget)
                 self.plugin_form_vbox.pack_start(expander)
-        for form_name, form in self.forms.iteritems():
+        for form_name, form in list(self.forms.items()):
             if form_name in self.no_gui_names:
                 continue
             form_view = self.form_views[form_name]
@@ -139,8 +139,8 @@ class AppOptionsController:
         self.apply()
 
     def apply(self):
-        for name, form_view in self.form_views.iteritems():
-            fields = form_view.form.fields.keys()
+        for name, form_view in list(self.form_views.items()):
+            fields = list(form_view.form.fields.keys())
             attrs = {}
             for field in fields:
                 if form_view.form.fields[field].element.validate():

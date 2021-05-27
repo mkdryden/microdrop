@@ -103,7 +103,7 @@ def config(args=None):
     config = md.config.Config(args.config)
 
     if args.command == 'locate':
-        print config.filename
+        print(config.filename)
     elif args.command == 'show':
         if args.get:
             data = pydash.get(config.data.dict(), args.get)
@@ -115,14 +115,14 @@ def config(args=None):
             json.dump(obj=data, fp=sys.stdout, indent=4)
         elif args.yaml:
             # Output in YAML format.
-            print yaml.dump(data, default_flow_style=False),
+            print(yaml.dump(data, default_flow_style=False), end=' ')
         elif isinstance(data, dict):
             # Output in `ini` format.
             output = io.BytesIO()
             configobj.ConfigObj(data).write(output)
-            print output.getvalue(),
+            print(output.getvalue(), end=' ')
         else:
-            print data
+            print(data)
     elif args.command == 'edit':
         for action_i in ('append', 'prepend', 'set', 'remove', 'remove_key'):
             if getattr(args, action_i):
@@ -155,7 +155,7 @@ def config(args=None):
                     # Merge nested value into existing configuration structure.
                     pydash.merge(config.data, nested_value)
                 elif not isinstance(config_value, list):
-                    print >> sys.stderr, 'Value at %s is not a list.' % key
+                    print('Value at %s is not a list.' % key, file=sys.stderr)
                     raise SystemExit(1)
 
                 if new_value in config_value:
@@ -191,7 +191,7 @@ def config(args=None):
         if args.dry_run:
             output = io.BytesIO()
             config.data.write(output)
-            print output.getvalue(),
+            print(output.getvalue(), end=' ')
         else:
             config.save()
     return config

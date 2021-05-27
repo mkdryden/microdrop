@@ -43,7 +43,7 @@ def execute_step(plugin_kwargs):
     # Get list of coroutine futures by emitting `on_step_run()`.
     plugin_step_tasks = emit_signal("on_step_run", args=[plugin_kwargs,
                                                          signals])
-    future = asyncio.wait(plugin_step_tasks.values())
+    future = asyncio.wait(list(plugin_step_tasks.values()))
 
     loop.create_task(notify_signals_connected())
     result = yield asyncio.From(future)

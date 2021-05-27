@@ -26,3 +26,7 @@ def glade_path():
     Return path to `.glade` files used by `gtk` to construct views.
     '''
     return base_path().joinpath('gui', 'glade')
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

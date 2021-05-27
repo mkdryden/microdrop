@@ -82,7 +82,7 @@ def get_channel_sweep_parameters(voltage=100, frequency=10e3, channels=None,
 
     # Collection waveform and channel selection values from dialog.
     form_values = {name: f.element.value
-                   for name, f in form_view.form.fields.items()}
+                   for name, f in list(form_view.form.fields.items())}
 
     if channels is not None:
         form_values['channels'] = (df_channel_select

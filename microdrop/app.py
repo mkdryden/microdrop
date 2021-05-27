@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 import logging
 import os
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 import pprint
@@ -53,7 +53,7 @@ def parse_args(args=None):
 
 
 def test(*args, **kwargs):
-    print 'args=%s\nkwargs=%s' % (args, kwargs)
+    print(('args=%s\nkwargs=%s' % (args, kwargs)))
 
 
 class App(SingletonPlugin, AppDataController):
@@ -111,7 +111,7 @@ class App(SingletonPlugin, AppDataController):
         '''
         args = parse_args()
 
-        print 'Arguments: %s' % args
+        print(('Arguments: %s' % args))
 
         self.name = "microdrop.app"
         #: .. versionadded:: 2.11.2
@@ -224,7 +224,8 @@ class App(SingletonPlugin, AppDataController):
         if logger.getEffectiveLevel() >= logging.DEBUG:
             caller = caller_name(skip=2)
             logger.debug('%s -> plugin_data:', caller)
-            map(logger.debug, pprint.pformat(data).splitlines())
+            for line in pprint.pformat(data).splitlines():
+                logger.debug(line)
         self.plugin_data[plugin_name] = data
 
     def on_app_options_changed(self, plugin_name):
@@ -376,7 +377,7 @@ class App(SingletonPlugin, AppDataController):
                 # Mark plugin to be removed from "enabled" list to prevent
                 # trying to enable it on future launches.
                 plugins_to_disable_by_default.append(package_name)
-            except Exception, exception:
+            except Exception as exception:
                 logger.error(exception, exc_info=True)
         # Remove marked plugins from "enabled" list to prevent trying to enable
         # it on future launches.
@@ -496,7 +497,7 @@ class App(SingletonPlugin, AppDataController):
         values = AppDataController.get_plugin_app_values(plugin_name)
         _L().debug('update_log_file %s', values)
         required = set(['log_enabled', 'log_file'])
-        if values is None or required.intersection(values.keys()) != required:
+        if values is None or required.intersection(list(values.keys())) != required:
             return
         # values contains both log_enabled and log_file
         log_file = values['log_file']
@@ -542,7 +543,7 @@ class App(SingletonPlugin, AppDataController):
                 if not isinstance(step, Step):
                     # Invalid object type
                     return
-        except (Exception,), why:
+        except (Exception,) as why:
             _L().info('invalid data: %s', why)
             return
         self.protocol.insert_steps(step_number, values=new_steps)

@@ -114,7 +114,7 @@ class ProtocolGridView(CombinedFields):
             self.set_cursor(row)
 
     def on_row_changed(self, list_, row_id, row, field_name, value):
-        for form_name, uuid_code in self.uuid_mapping.iteritems():
+        for form_name, uuid_code in list(self.uuid_mapping.items()):
             field_set_prefix = self.field_set_prefix % uuid_code
             if field_name.startswith(field_set_prefix):
                 form_step = row.get_row_fields(form_name)
@@ -129,7 +129,7 @@ class ProtocolGridView(CombinedFields):
 
     def on_rows_changed(self, list_, row_ids, rows, attr):
         for step_number, step in [(i, self[i]) for i in row_ids]:
-            for form_name, uuid_code in self.uuid_mapping.iteritems():
+            for form_name, uuid_code in list(self.uuid_mapping.items()):
                 field_set_prefix = self.field_set_prefix % uuid_code
                 if attr.startswith(field_set_prefix):
                     form_step = step.get_row_fields(form_name)
@@ -189,8 +189,8 @@ class ProtocolGridController(SingletonPlugin, AppDataController):
         self.update_grid()
 
     def test(self, *args, **kwargs):
-        print 'args=%s, kwargs=%s' % (args, kwargs)
-        print 'attrs=%s' % args[1].attrs
+        print(('args=%s, kwargs=%s' % (args, kwargs)))
+        print(('attrs=%s' % args[1].attrs))
 
     def on_step_options_changed(self, plugin, step_number):
         if self.widget is None:
@@ -221,7 +221,7 @@ class ProtocolGridController(SingletonPlugin, AppDataController):
             return
         _L().debug('plugin_fields=%s', protocol.plugin_fields)
         forms = dict([(k, f) for k, f in
-                      emit_signal('get_step_form_class').iteritems()
+                      list(emit_signal('get_step_form_class').items())
                       if f is not None])
 
         steps = protocol.steps
@@ -231,9 +231,8 @@ class ProtocolGridController(SingletonPlugin, AppDataController):
             # Assign directly to _enabled_fields to avoid recursive call into
             # update_grid()
             self._enabled_fields = dict([(form_name,
-                                          set(form.field_schema_mapping
-                                              .keys()))
-                                         for form_name, form in forms.items()])
+                                          set(form.field_schema_mapping.keys()))
+                                         for form_name, form in list(forms.items())])
 
         # The step ID column can be hidden by changing show_ids to False
         combined_fields = ProtocolGridView(forms, self.enabled_fields,
@@ -245,7 +244,7 @@ class ProtocolGridController(SingletonPlugin, AppDataController):
             values = emit_signal('get_step_values', [i])
 
             attributes = dict()
-            for form_name, form in combined_fields.forms.iteritems():
+            for form_name, form in list(combined_fields.forms.items()):
                 attr_values = values[form_name]
                 attributes[form_name] = RowFields(**attr_values)
             combined_row = CombinedRow(combined_fields, attributes=attributes)

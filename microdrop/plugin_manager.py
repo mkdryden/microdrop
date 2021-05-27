@@ -1,4 +1,4 @@
-from StringIO import StringIO
+from io import StringIO
 from collections import namedtuple
 from contextlib import closing
 import logging
@@ -101,7 +101,8 @@ def load_plugins(plugins_dir='plugins', import_from_parent=True):
                         package_i)
             imported_plugins.add(current_plugin)
         except Exception:
-            map(logger.info, traceback.format_exc().splitlines())
+            for line in traceback.format_exc().splitlines():
+                logger.info(line)
             logger.error('Error loading %s plugin.', package_i.name,
                          exc_info=True)
 
@@ -325,27 +326,27 @@ def get_schedule(observers, function):
 
     # Query plugins for schedule requests for 'function'
     schedule_requests = {}
-    for observer in observers.values():
+    for observer in list(observers.values()):
         if hasattr(observer, 'get_schedule_requests'):
             schedule_requests[observer.name] =\
                     observer.get_schedule_requests(function)
 
     if schedule_requests:
-        scheduler = task_scheduler.TaskScheduler(observers.keys())
-        for request in [r for name, requests in schedule_requests.items()
+        scheduler = task_scheduler.TaskScheduler(list(observers.keys()))
+        for request in [r for name, requests in list(schedule_requests.items())
                         for r in requests]:
             try:
                 scheduler.request_order(*request)
             except AssertionError:
                 logger.debug('Schedule requests for `%s`', function)
-                map(logger.debug,
-                    pprint.pformat(schedule_requests).splitlines())
+                for line in pprint.pformat(schedule_requests).splitlines():
+                    logger.debug(line)
                 logger.info('emit_signal(%s) could not add schedule request '
                             '%s', function, request)
                 continue
         return scheduler.get_schedule()
     else:
-        return observers.keys()
+        return list(observers.keys())
 
 
 def get_observers(function, interface=IPlugin):
@@ -421,7 +422,7 @@ def emit_signal(function, args=None, interface=IPlugin):
                 f = getattr(observer, function)
                 logger.debug('  call: %s.%s(...)', observer.name, function)
                 return_codes[observer.name] = f(*args)
-            except Exception, why:
+            except Exception as why:
                 with closing(StringIO()) as message:
                     if hasattr(observer, "name"):
                         if interface == ILoggingPlugin:
@@ -429,14 +430,14 @@ def emit_signal(function, args=None, interface=IPlugin):
                             # since that will result in infinite recursion.
                             # Instead, just continue onto the next plugin.
                             continue
-                        print >> message, \
-                            '%s plugin crashed processing %s signal.' % \
-                            (observer.name, function)
-                    print >> message, 'Reason:', str(why)
+                        print('%s plugin crashed processing %s signal.' % \
+                            (observer.name, function), file=message)
+                    print('Reason:', str(why), file=message)
                     logger.error(message.getvalue().strip())
-                map(logger.info, traceback.format_exc().splitlines())
+                for line in traceback.format_exc().splitlines():
+                    logger.info(line)
         return return_codes
-    except Exception, why:
+    except Exception as why:
         logger.error(why, exc_info=True)
         return {}
 
@@ -518,7 +519,7 @@ def connect_pyutilib_signal(signals, signal, *args, **kwargs):
     import functools as ft
     import inspect
 
-    from microdrop.plugin_manager import ExtensionPoint
+    from .microdrop.plugin_manager import ExtensionPoint
 
     callbacks = [getattr(p, signal) for p in ExtensionPoint(*args, **kwargs) if hasattr(p, signal)]
 

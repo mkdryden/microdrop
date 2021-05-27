@@ -1,4 +1,4 @@
-import cPickle as pickle
+import pickle as pickle
 import threading
 
 from pygtkhelpers.gthreads import gtk_threadsafe
@@ -109,8 +109,8 @@ class DeviceInfoZmqPlugin(ZmqPlugin):
             else:
                 # Well-formed (according to schema pattern) comma-separated
                 # list of channels was provided.
-                channels = sorted(set(map(int, filter(len, result['channels']
-                                                        .split(',')))))
+                channels = sorted(set(map(int, list(filter(len, result['channels']
+                                                        .split(','))))))
                 hub_execute(self.name, 'set_electrode_channels',
                             electrode_id=electrode_id, channels=channels)
         _dialog()

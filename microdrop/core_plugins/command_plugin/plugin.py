@@ -57,8 +57,8 @@ class CommandZmqPlugin(ZmqPlugin):
         if title is None:
             title = (command_name[:1].upper() +
                      command_name[1:]).replace('_', ' ')
-        row_i = dict(zip(self._commands, [namespace, plugin_name, command_name,
-                                          title]))
+        row_i = dict(list(zip(self._commands, [namespace, plugin_name, command_name,
+                                          title])))
         self._commands = self._commands.append(row_i, ignore_index=True)
         return self.commands
 

@@ -84,7 +84,7 @@ class Config(object):
         logger = _L()  # use logger with method context
         # set all str values that are 'None' to None
         def set_str_to_none(d):
-            for k, v in d.items():
+            for k, v in list(d.items()):
                 if type(v) == Section:
                     set_str_to_none(v)
                 else:

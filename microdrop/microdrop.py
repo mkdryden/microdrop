@@ -31,7 +31,7 @@ if platform.system() == 'Windows':
 
 
 def except_handler(*args, **kwargs):
-    print args, kwargs
+    print((args, kwargs))
     traceback.print_tb(args[2])
 
 
@@ -59,7 +59,7 @@ def main():
 
     settings = gtk.settings_get_default()
     # Use a button ordering more consistent with Windows
-    print 'Use a button ordering more consistent with Windows'
+    print('Use a button ordering more consistent with Windows')
     settings.set_property('gtk-alternative-button-order', True)
 
     logging.basicConfig(format='%(asctime)s.%(msecs)03d [%(levelname)s:%(name)s]: '
@@ -70,8 +70,8 @@ def main():
 
     # XXX Import from `app` module automatically instantiates instance of `App`
     # class.
-    from app import App
-    from app_context import get_app
+    from .app import App
+    from .app_context import get_app
 
     gtk.threads_init()
     gtk.gdk.threads_init()

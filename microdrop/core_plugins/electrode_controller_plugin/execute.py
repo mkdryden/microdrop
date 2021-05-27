@@ -30,12 +30,12 @@ def _warning(signal, message, **kwargs):
     responses = signal.send(message, **kwargs)
 
     try:
-        receivers, co_callbacks = zip(*responses)
+        receivers, co_callbacks = list(zip(*responses))
         results = yield asyncio.From(asyncio.gather(*co_callbacks))
     except Exception:
         raise RuntimeError(message)
     else:
-        raise asyncio.Return(zip(receivers, results))
+        raise asyncio.Return(list(zip(receivers, results)))
 
 
 @asyncio.coroutine
@@ -121,7 +121,7 @@ def execute_actuation(signals, static_states, dynamic_states,
         result = signals.signal('set-%s' % key).send(value)
         if result:
             try:
-                receivers, co_callbacks = zip(*result)
+                receivers, co_callbacks = list(zip(*result))
                 if receivers:
                     results = yield asyncio.From(asyncio
                                                  .gather(*co_callbacks))
@@ -131,7 +131,7 @@ def execute_actuation(signals, static_states, dynamic_states,
                 pass
             else:
                 if receivers:
-                    raise asyncio.Return(zip(receivers, results))
+                    raise asyncio.Return(list(zip(receivers, results)))
 
         if exception is not None:
             message = ('Error setting **%s**: `%s`' % (key, exception))
@@ -148,7 +148,7 @@ def execute_actuation(signals, static_states, dynamic_states,
 
         if waveform_result:
             _L().info('%s set to %s%s (receivers: `%s`)', key,
-                      si.si_format(value), unit, zip(*waveform_result)[0])
+                      si.si_format(value), unit, list(zip(*waveform_result))[0])
 
     electrode_actuators = signals.signal('on-actuation-request')\
         .send(s_electrodes_to_actuate, duration_s=duration_s)
@@ -164,7 +164,7 @@ def execute_actuation(signals, static_states, dynamic_states,
         # Simulate actuation by waiting for specified duration.
         yield asyncio.From(asyncio.sleep(duration_s))
     else:
-        actuation_tasks = zip(*electrode_actuators)[1]
+        actuation_tasks = list(zip(*electrode_actuators))[1]
 
         # Wait for actuations to complete.
         start = dt.datetime.now()
@@ -311,7 +311,8 @@ def execute_actuations(signals, static_states, voltage, frequency,
                 if logger.getEffectiveLevel() >= logging.DEBUG:
                         message = ('receiver: %s, actuation_request=%s' %
                                    (receiver_i, request_i))
-                        map(logger.debug, message.splitlines())
+                        for line in message.splitlines():
+                            logger.debug(line)
 
         if requests:
             combined_states = pd.concat([r[r > 0] for r in requests])

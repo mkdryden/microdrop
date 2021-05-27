@@ -4,7 +4,7 @@ import threading
 import trollius as asyncio
 
 
-print '[interfaces] %s' % threading.current_thread()
+print(('[interfaces] %s' % threading.current_thread()))
 
 PluginGlobals.push_env('microdrop.managed')
 PluginGlobals.pop_env()

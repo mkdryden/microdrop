@@ -94,14 +94,14 @@ class DmfDevice(object):
 
         self.df_shape_connections_indexed = self.df_shape_connections.copy()
         self.df_shape_connections_indexed['source'] = \
-            map(str, self.shape_indexes[self.df_shape_connections['source']])
+            list(map(str, self.shape_indexes[self.df_shape_connections['source']]))
         self.df_shape_connections_indexed['target'] \
-            = map(str, self.shape_indexes[self.df_shape_connections
-                                          ['target']])
+            = list(map(str, self.shape_indexes[self.df_shape_connections
+                                          ['target']]))
 
         self.df_shapes_indexed = self.df_shapes.copy()
-        self.df_shapes_indexed['id'] = map(str, self.shape_indexes
-                                           [self.df_shapes['id']])
+        self.df_shapes_indexed['id'] = list(map(str, self.shape_indexes
+                                           [self.df_shapes['id']]))
 
         #: .. versionadded:: 2.28
         #:     Up, down, left, and right neighbours for each electrode.
@@ -386,7 +386,7 @@ class DmfDevice(object):
 
         rows = []
 
-        for electrode_id, new_channel_indexes in new_groups.iteritems():
+        for electrode_id, new_channel_indexes in list(new_groups.items()):
             if electrode_id not in original_groups:
                 orig_i = []
             else:
@@ -433,7 +433,7 @@ def extract_channels(df_shapes):
                                .set_index('id')['data-channels']
                                .str.split(',').dropna())
 
-        for shape_i, channels_i in shape_channel_lists.iteritems():
+        for shape_i, channels_i in list(shape_channel_lists.items()):
             frames.extend([[shape_i, int(channel)] for channel in channels_i])
 
     if frames:

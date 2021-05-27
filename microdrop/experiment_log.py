@@ -1,7 +1,8 @@
 from collections import OrderedDict
 from copy import deepcopy
+from functools import reduce
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
 import datetime as dt
@@ -56,21 +57,20 @@ def log_data_to_frame(log_data_i):
                 del experiment_info[k]
         return experiment_info.dropna()
 
-    plugin_names_i = sorted(reduce(lambda a, b: a.union(b.keys()),
+    plugin_names_i = sorted(reduce(lambda a, b: a.union(list(b.keys())),
                                    log_data_i.data, set()))
     frames_i = OrderedDict()
 
     for plugin_name_ij in plugin_names_i:
         try:
-            frame_ij = pd.DataFrame(map(lambda v: pickle.loads(v)
-                                        if v else {},
-                                        [s.get(plugin_name_ij)
-                                        for s in log_data_i.data]))
-        except Exception, exception:
-            print plugin_name_ij, exception
+            frame_ij = pd.DataFrame([pickle.loads(v)
+                                        if v else {} for v in [s.get(plugin_name_ij)
+                                        for s in log_data_i.data]])
+        except Exception as exception:
+            print((plugin_name_ij, exception))
         else:
             frames_i[plugin_name_ij] = frame_ij
-    df_log_i = pd.concat(frames_i.values(), axis=1, keys=frames_i.keys())
+    df_log_i = pd.concat(list(frames_i.values()), axis=1, keys=list(frames_i.keys()))
 
     start_time_i = arrow.get(df_log_i.iloc[0][('core', 'start time')]).naive
     df_log_i[('core', 'utc_timestamp')] = \
@@ -137,18 +137,18 @@ class ExperimentLog():
             new_data = []
             plugin_name = None
             for step_data in self.data:
-                if "control board hardware version" in step_data.keys():
+                if "control board hardware version" in list(step_data.keys()):
                     plugin_name = "wheelerlab.dmf_control_board_" + \
                         step_data["control board hardware version"]
             for i in range(len(self.data)):
                 new_data.append({})
-                for k, v in self.data[i].items():
+                for k, v in list(self.data[i].items()):
                     if plugin_name and k in ("FeedbackResults",
                                              "SweepFrequencyResults",
                                              "SweepVoltageResults"):
                         try:
                             new_data[i][plugin_name] = {k: pickle.loads(v)}
-                        except Exception, e:
+                        except Exception as e:
                             logger.error("Couldn't load experiment log data "
                                          "for plugin: %s. %s.", plugin_name, e)
                     else:
@@ -158,7 +158,7 @@ class ExperimentLog():
 
             # serialize objects to yaml strings
             for i in range(len(self.data)):
-                for plugin_name, plugin_data in new_data[i].items():
+                for plugin_name, plugin_data in list(new_data[i].items()):
                     new_data[i][plugin_name] = yaml.dump(plugin_data)
             self.data = new_data
             self.version = str(Version(0, 1, 0))
@@ -190,14 +190,14 @@ class ExperimentLog():
             try:
                 out = pickle.load(f)
                 logger.debug("Loaded object from pickle.")
-            except Exception, e:
+            except Exception as e:
                 logger.debug("Not a valid pickle file. %s." % e)
         if out is None:
             with open(filename, 'rb') as f:
                 try:
                     out = yaml.load(f)
                     logger.debug("Loaded object from YAML file.")
-                except Exception, e:
+                except Exception as e:
                     logger.debug("Not a valid YAML file. %s." % e)
         if out is None:
             raise TypeError
@@ -210,15 +210,15 @@ class ExperimentLog():
         out._upgrade()
         # load objects from serialized strings
         for i in range(len(out.data)):
-            for plugin_name, plugin_data in out.data[i].items():
+            for plugin_name, plugin_data in list(out.data[i].items()):
                 try:
                     out.data[i][plugin_name] = pickle.loads(plugin_data)
-                except Exception, e:
+                except Exception as e:
                     logger.debug("Not a valid pickle string ("
                                  "plugin: %s). %s." % (plugin_name, e))
                     try:
                         out.data[i][plugin_name] = yaml.load(plugin_data)
-                    except Exception, e:
+                    except Exception as e:
                         logger.error("Couldn't load experiment log data for "
                                      "plugin: %s. %s." % (plugin_name, e))
         logger.debug("loaded in %f s.", time.time() - start_time)
@@ -235,7 +235,7 @@ class ExperimentLog():
             out = deepcopy(self)
             # serialize plugin dictionaries to strings
             for i in range(len(out.data)):
-                for plugin_name, plugin_data in out.data[i].items():
+                for plugin_name, plugin_data in list(out.data[i].items()):
                     if format == 'pickle':
                         out.data[i][plugin_name] = pickle.dumps(plugin_data)
                     elif format == 'yaml':
@@ -273,13 +273,13 @@ class ExperimentLog():
             self.data.append({})
         if plugin_name not in self.data[-1]:
             self.data[-1][plugin_name] = {}
-        for k, v in data.items():
+        for k, v in list(data.items()):
             self.data[-1][plugin_name][k] = v
 
     def get(self, name, plugin_name='core'):
         var = []
         for d in self.data:
-            if plugin_name in d and d[plugin_name].keys().count(name):
+            if plugin_name in d and list(d[plugin_name].keys()).count(name):
                 var.append(d[plugin_name][name])
             else:
                 var.append(None)

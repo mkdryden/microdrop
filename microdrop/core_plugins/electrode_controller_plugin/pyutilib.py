@@ -3,7 +3,7 @@
 
 MicroDrop Pyutilib electrode controller plugin.
 '''
-from __future__ import division, print_function, unicode_literals
+
 from concurrent.futures import ThreadPoolExecutor
 import functools as ft
 import logging
@@ -172,10 +172,9 @@ class ElectrodeControllerZmqPlugin(ZmqPlugin, StepOptionsController):
                                      index=channel_electrodes.values)
         logger = _L()  # use logger with method context
         if logger.getEffectiveLevel() <= logging.DEBUG:
-            map(logger.debug, 'Translate channel states:\n%sto electrode '
-                'states:\n%s' % (pprint.pformat(channel_electrodes),
-                                 pprint.pformat(electrode_states))
-                .splitlines())
+            for line in f'Translate channel states:\n{pprint.pformat(channel_electrodes)}\
+                          to electrode states:\n{pprint.pformat(electrode_states)}'.splitlines():
+                logger.debug(line)
         return self.set_electrode_states(electrode_states, save=save)
 
     def set_electrode_states(self, electrode_states, save=True):
@@ -210,7 +209,8 @@ class ElectrodeControllerZmqPlugin(ZmqPlugin, StepOptionsController):
         # Compute actuated area based on geometries in DMF device definition.
         result['actuated_area'] = self.get_actuated_area(electrode_states)
         if logger.isEnabledFor(logging.DEBUG):
-            map(logger.debug, pprint.pformat(result).splitlines())
+            for line in pprint.pformat(result).splitlines():
+                logger.debug(line)
         return result
 
     def on_execute__set_electrode_state(self, request):

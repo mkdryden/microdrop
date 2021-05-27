@@ -74,7 +74,7 @@ class AppDataController(object):
             self.set_app_values(app.config.data[self.name])
 
         data = app.get_data(self.name)
-        for k, v in defaults.items():
+        for k, v in list(defaults.items()):
             if k not in data:
                 data[k] = v
         app.set_data(self.name, data)
@@ -88,7 +88,7 @@ class AppDataController(object):
         if self.AppFields:
             return dict([(k, v.value)
                          for k, v in
-                         self.AppFields.from_defaults().iteritems()])
+                         list(self.AppFields.from_defaults().items())])
         else:
             return dict()
 
@@ -96,7 +96,7 @@ class AppDataController(object):
         return self.AppFields
 
     def get_app_fields(self):
-        return self.AppFields.field_schema_mapping.keys()
+        return list(self.AppFields.field_schema_mapping.keys())
 
     def get_app_values(self):
         if not hasattr(self, 'name'):
@@ -133,8 +133,8 @@ class AppDataController(object):
             return
         if not hasattr(self, 'name'):
             raise NotImplementedError
-        for k in values_dict.keys():
-            if k not in self.AppFields.field_schema_mapping.keys():
+        for k in list(values_dict.keys()):
+            if k not in list(self.AppFields.field_schema_mapping.keys()):
                 _L().info("Invalid key (%s) in configuration file section: "
                           "[%s].", k, self.name)
                 # remove invalid key from config file
@@ -143,7 +143,7 @@ class AppDataController(object):
         if not elements.validate():
             raise ValueError('Invalid values: %s' % elements.errors)
         values = dict([(k, v.value)
-                       for k, v in elements.iteritems()
+                       for k, v in list(elements.items())
                        if v.value is not None])
         app = get_app()
         app_data = app.get_data(self.name)
@@ -165,7 +165,7 @@ class StepOptionsController(object):
         if self.get_step_form_class() is None:
             return dict()
         return dict([(k, v.value)
-                     for k, v in self.StepFields.from_defaults().iteritems()])
+                     for k, v in list(self.StepFields.from_defaults().items())])
 
     def get_step_form_class(self):
         return getattr(self, 'StepFields', None)
@@ -173,7 +173,7 @@ class StepOptionsController(object):
     def get_step_fields(self):
         if self.get_step_form_class() is None:
             return []
-        return self.StepFields.field_schema_mapping.keys()
+        return list(self.StepFields.field_schema_mapping.keys())
 
     def get_step_values(self, step_number=None):
         return self.get_step_options(step_number)
@@ -214,13 +214,13 @@ class StepOptionsController(object):
         if step_number is None:
             step_number = protocol_controller.protocol_state['step_number']
         _L().debug('set_step[%d]: values_dict=%s', step_number, values_dict)
-        validate_dict = dict([(k, v) for k, v in values_dict.iteritems()
+        validate_dict = dict([(k, v) for k, v in list(values_dict.items())
                               if k in self.StepFields.field_schema_mapping])
         validation_result = self.StepFields(value=validate_dict)
         if not validation_result.validate():
             raise ValueError('Invalid values: %s' % validation_result.errors)
         values = values_dict.copy()
-        for name, field in validation_result.iteritems():
+        for name, field in list(validation_result.items()):
             if field.value is None:
                 continue
             values[name] = field.value
@@ -287,7 +287,8 @@ def hub_execute_async(*args, **kwargs):
     logger = _L(1)
     if logger.getEffectiveLevel() <= logging.DEBUG:
         message = 'hub_execute_async(args=`%s`, kwargs=`%s`)' % (args, kwargs)
-        map(logger.debug, message.splitlines())
+        for line in message.splitlines:
+            logger.debug(line)
     return _hub_method('execute_async', *args, **kwargs)
 
 
@@ -300,5 +301,6 @@ def hub_execute(*args, **kwargs):
     logger = _L(1)
     if logger.getEffectiveLevel() <= logging.DEBUG:
         message = 'hub_execute(args=`%s`, kwargs=`%s`)' % (args, kwargs)
-        map(logger.debug, message.splitlines())
+        for line in message.splitlines:
+            logger.debug(line)
     return _hub_method('execute', *args, **kwargs)

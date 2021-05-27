@@ -8,14 +8,14 @@ import gtk
 
 
 def get_app():
-    import plugin_manager
+    from . import plugin_manager
 
     class_ = plugin_manager.get_service_class('App', env='microdrop')
     return plugin_manager.get_service_instance(class_, env='microdrop')
 
 
 def get_hub_uri():
-    from plugin_manager import get_service_instance_by_name
+    from .plugin_manager import get_service_instance_by_name
 
     hub_plugin = get_service_instance_by_name('microdrop.zmq_hub_plugin',
                                               env='microdrop')

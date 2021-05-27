@@ -45,7 +45,7 @@ class GitUtil(object):
                 valid_cmd = True
                 break
         if not valid_cmd:
-            raise GitError, 'No valid git command found'
+            raise GitError('No valid git command found')
         self._git = cmd
         return self._git
 

@@ -42,7 +42,7 @@ class GtkCairoView(SlaveView):
             # the video will be drawn over top of any widgets, etc. in the
             # parent window.
             if not self.widget.window.ensure_native():
-                raise RuntimeError, 'Failed to get native window handle'
+                raise RuntimeError('Failed to get native window handle')
         if os.name == 'nt':
             self.window_xid = self.widget.window.handle
         else:
@@ -52,7 +52,7 @@ class GtkCairoView(SlaveView):
         clipboard.set_text(str(self.window_xid))
         if self._set_window_title:
             self.widget.parent.set_title('[window_xid] %s' % self.window_xid)
-        print '[window_xid] %s' % self.window_xid
+        print(('[window_xid] %s' % self.window_xid))
 
 
 if __name__ == '__main__':

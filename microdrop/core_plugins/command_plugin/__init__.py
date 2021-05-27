@@ -1,6 +1,6 @@
 try:
-    import microdrop_plugin
+    from . import microdrop_plugin
 except ImportError:
     import sys
 
-    print >> sys.stderr, 'Error importing command_plugin'
+    print('Error importing command_plugin', file=sys.stderr)

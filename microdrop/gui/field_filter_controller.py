@@ -49,8 +49,7 @@ class FieldFilterController(object):
         service = observers.service(plugin_name)
         if not hasattr(service, 'get_app_values'):
             values = dict([(k, v.value) for k, v in
-                           self.forms[plugin_name].from_defaults()
-                           .iteritems()])
+                           list(self.forms[plugin_name].from_defaults().items())])
         else:
             values = service.get_app_values()
         if not values:
@@ -73,7 +72,7 @@ class FieldFilterController(object):
         self.clear_form()
         app = get_app()
         core_plugins_count = 0
-        for name, form in self.forms.iteritems():
+        for name, form in list(self.forms.items()):
             # For each form, generate a pygtkhelpers formview and append the
             # view onto the end of the plugin vbox
 
@@ -111,12 +110,12 @@ class FieldFilterController(object):
         if not initial_values:
             initial_values = {}
 
-        for form_name, form in self.forms.iteritems():
+        for form_name, form in list(self.forms.items()):
             if not form.field_schema:
                 continue
             form_view = self.form_views[form_name]
             values = initial_values.get(form_name, {})
-            for name, field in form_view.form.fields.items():
+            for name, field in list(form_view.form.fields.items()):
                 if name in values or not initial_values:
                     value = True
                 else:
@@ -142,8 +141,8 @@ class FieldFilterController(object):
 
     def apply(self):
         enabled_fields_by_plugin = {}
-        for name, form_view in self.form_views.iteritems():
-            enabled_fields = set([f for f, v in form_view.form.fields.items()
+        for name, form_view in list(self.form_views.items()):
+            enabled_fields = set([f for f, v in list(form_view.form.fields.items())
                                   if v.element.value])
             if enabled_fields:
                 enabled_fields_by_plugin[name] = enabled_fields

@@ -244,7 +244,7 @@ class MainWindowController(SingletonPlugin):
             if data[key] != new_value:
                 update_required = True
                 data[key] = new_value
-        position = dict(zip('xy', self.view.get_position()))
+        position = dict(list(zip('xy', self.view.get_position())))
         for key in 'xy':
             if data[key] != position[key]:
                 update_required = True
@@ -372,7 +372,7 @@ class MainWindowController(SingletonPlugin):
             Wrap with :func:`gtk_threadsafe` decorator to ensure the code runs
             in the main GTK thread.
         '''
-        from app_options_controller import AppOptionsController
+        from .app_options_controller import AppOptionsController
 
         AppOptionsController().run()
 

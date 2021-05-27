@@ -23,7 +23,7 @@ class ConfigController(SingletonPlugin):
 
         # load all app options from the config file
         observers = ExtensionPoint(IPlugin)
-        for section_name, values_dict in self.app.config.data.iteritems():
+        for section_name, values_dict in list(self.app.config.data.items()):
             service = observers.service(section_name)
             if service:
                 if hasattr(service, 'set_app_values'):

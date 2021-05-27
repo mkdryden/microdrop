@@ -4,7 +4,7 @@ import copy
 import os
 import logging
 import shutil
-import Queue
+import queue
 
 from asyncio_helpers import cancellable
 from logging_helpers import _L, caller_name
@@ -142,7 +142,7 @@ class ProtocolController(SingletonPlugin):
         self._modified = False
         self.plugin = None
         self.plugin_timeout_id = None
-        self.step_execution_queue = Queue.Queue()
+        self.step_execution_queue = queue.Queue()
 
         # Protocol execution state
         self.protocol_state = {'loop': 0, 'step_number': 0}
@@ -196,7 +196,7 @@ class ProtocolController(SingletonPlugin):
 
         try:
             protocol = Protocol.load(filename)
-        except FutureVersionError, why:
+        except FutureVersionError as why:
             _L().error('''
 Could not open protocol: %s
 
@@ -204,7 +204,7 @@ It was created with a newer version of the software.
 Protocol is version %s, but only up to version %s is supported with this
 version of the software.'''.strip(), filename, why.future_version,
                          why.current_version)
-        except Exception, why:
+        except Exception as why:
             _L().error("Could not open %s. %s", filename, why)
         else:
             self.activate_protocol(protocol)
@@ -221,11 +221,11 @@ version of the software.'''.strip(), filename, why.future_version,
         enabled_plugins = (get_service_names(env='microdrop.managed') +
                            get_service_names('microdrop'))
         missing_plugins = []
-        for k, v in protocol.plugin_data.items():
+        for k, v in list(protocol.plugin_data.items()):
             if k not in enabled_plugins and k not in missing_plugins:
                 missing_plugins.append(k)
         for i in range(len(protocol)):
-            for k, v in protocol[i].plugin_data.items():
+            for k, v in list(protocol[i].plugin_data.items()):
                 if k not in enabled_plugins and k not in missing_plugins:
                     missing_plugins.append(k)
         self.modified = False
@@ -242,11 +242,11 @@ version of the software.'''.strip(), filename, why.future_version,
                                           ",\n\t".join(missing_plugins)))
             if result == gtk.RESPONSE_YES:
                 logger.info('Deleting protocol data for missing items')
-                for k, v in protocol.plugin_data.items():
+                for k, v in list(protocol.plugin_data.items()):
                     if k in missing_plugins:
                         del protocol.plugin_data[k]
                 for i in range(len(protocol)):
-                    for k, v in protocol[i].plugin_data.items():
+                    for k, v in list(protocol[i].plugin_data.items()):
                         if k in missing_plugins:
                             del protocol[i].plugin_data[k]
                 self.modified = True
@@ -448,7 +448,7 @@ version of the software.'''.strip(), filename, why.future_version,
                 try:
                     with open(filename, 'w') as output:
                         app.protocol.to_json(output, indent=2)
-                except SerializationError, exception:
+                except SerializationError as exception:
                     plugin_exception_counts = Counter([e['plugin'] for e in
                                                        exception.exceptions])
                     logger.info('%s: `%s`', exception, exception.exceptions)
@@ -456,8 +456,7 @@ version of the software.'''.strip(), filename, why.future_version,
                                    'plugins: `%s`\n\n'
                                    'Would you like to exclude this data and '
                                    'export anyway?' %
-                                   ', '.join(sorted(plugin_exception_counts
-                                                    .keys())))
+                                   ', '.join(sorted(plugin_exception_counts.keys())))
                     if result == gtk.RESPONSE_YES:
                         # Delete plugin data that is causing serialization
                         # errors.
@@ -622,7 +621,7 @@ version of the software.'''.strip(), filename, why.future_version,
         def repeat_steps():
             all_steps = app.protocol.to_dict()['steps']
 
-            for i in xrange(app.protocol.n_repeats):
+            for i in range(app.protocol.n_repeats):
                 steps = all_steps[start_i:] if i == 0 else all_steps
                 self.protocol_state['loop'] = i
                 yield asyncio.From(execute_steps(steps, signals=signals))
@@ -681,7 +680,7 @@ version of the software.'''.strip(), filename, why.future_version,
                         step_task.cancel()
                     except RuntimeError:
                         pass
-            except Queue.Empty:
+            except queue.Empty:
                 break
 
     def run_step(self):

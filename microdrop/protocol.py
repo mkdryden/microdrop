@@ -1,10 +1,11 @@
 from collections import OrderedDict
 import copy
+from functools import reduce
 try:
-    import cPickle as pickle
+    import pickle as pickle
 except ImportError:
     import pickle
-import cStringIO as StringIO
+import io as StringIO
 import importlib
 import json
 import logging
@@ -114,17 +115,17 @@ def serialize_protocol(protocol_dict, serialize_func):
     try:
         # Serialize entire protocol.
         return serialize_func(protocol_dict)
-    except Exception, exception:
+    except Exception as exception:
         # Exception occurred.  Try to identify where exception occurred.
         logger = _L()  # use logger with function context
-        map(logger.debug, ['Error serializing protocol.',
-                           'Search for steps causing exception'])
+        logger.debug('Error serializing protocol.')
+        logger.debug('Search for steps causing exception')
         # Try to serialize each step, and record which steps cause exceptions.
         exception_steps = []
         for i, step_i in enumerate(protocol_dict['steps']):
             try:
                 serialize_func(step_i)
-            except Exception, exception:
+            except Exception as exception:
                 exception_steps.append({'step': i, 'error': str(exception)})
         logger.debug('Search for plugin(s) causing exception')
         # For each step causing an exception, try to independently serialize
@@ -132,10 +133,10 @@ def serialize_protocol(protocol_dict, serialize_func):
         exceptions = []
         for exception_step_i in exception_steps:
             step_i = protocol_dict['steps'][exception_step_i['step']]
-            for plugin_name_ij, plugin_data_ij in step_i.iteritems():
+            for plugin_name_ij, plugin_data_ij in step_i.items():
                 try:
                     serialize_func(plugin_data_ij)
-                except Exception, exception:
+                except Exception as exception:
                     exception_step_i.update({'error': str(exception),
                                              'plugin': plugin_name_ij,
                                              'data': plugin_data_ij})
@@ -166,20 +167,20 @@ def protocol_to_frame(protocol_i):
              compatible types.
     '''
     plugin_names_i = sorted(reduce(lambda a, b:
-                                   a.union(b.plugin_data.keys()),
+                                   a.union(list(b.plugin_data.keys())),
                                    protocol_i.steps, set()))
     frames_i = OrderedDict()
 
     for plugin_name_ij in plugin_names_i:
         try:
-            frame_ij = pd.DataFrame(map(pickle.loads,
+            frame_ij = pd.DataFrame(list(map(pickle.loads,
                                         [s.plugin_data.get(plugin_name_ij)
-                                         for s in protocol_i.steps]))
-        except Exception, exception:
-            print >> sys.stderr, exception
+                                         for s in protocol_i.steps])))
+        except Exception as exception:
+            print(exception, file=sys.stderr)
         else:
             frames_i[plugin_name_ij] = frame_ij
-    df_protocol = pd.concat(frames_i.values(), axis=1, keys=frames_i.keys())
+    df_protocol = pd.concat(list(frames_i.values()), axis=1, keys=list(frames_i.keys()))
     df_protocol.index.name = 'step_i'
     df_protocol.columns.names = ['plugin_name', 'step_field']
     return df_protocol
@@ -202,7 +203,7 @@ def safe_pickle_loads(data):
     '''
     try:
         return pickle.loads(data)
-    except Exception, exception:
+    except Exception as exception:
         _L().error('Error deserializing pickle data: `%s`\n%s', data,
                    exception)
 
@@ -227,7 +228,7 @@ def _plugin_data_to_dict(plugin_data, loaded=True):
     '''
     result = {}
 
-    for plugin_ij, plugin_data_ij in plugin_data.iteritems():
+    for plugin_ij, plugin_data_ij in plugin_data.items():
         # Unpickle data if necessary.
         if not loaded:
             plugin_data_ij = safe_pickle_loads(plugin_data_ij)
@@ -252,7 +253,7 @@ def _plugin_data_from_dict(plugin_data_dict):
         Dictionary containing Python plugin data.
     '''
     result = {}
-    for plugin_ij, plugin_data_ij in plugin_data_dict.iteritems():
+    for plugin_ij, plugin_data_ij in plugin_data_dict.items():
         # Use `from_dict` class method to reconstruct Python object for plugins
         # where applicable.
         if '__class__' in plugin_data_ij:
@@ -453,23 +454,23 @@ def protocol_to_ndjson(protocol, ostream=None):
         return json.dumps(obj, cls=zp.schema.PandasJsonEncoder)
 
     # Write JSON header (does not include any step data).
-    print >> ostream, serialize_func(protocol_dict)
+    print(serialize_func(protocol_dict), file=ostream)
     # Write plugin data for each step to a separate line in the output
     # stream.
     exceptions = []
     for i, step_i in enumerate(steps):
         try:
-            print >> ostream, serialize_func(step_i)
-        except Exception, exception:
+            print(serialize_func(step_i), file=ostream)
+        except Exception as exception:
             # Exception occurred while serializing step.
             _L().debug('Error serializing step.')
             # Try to independently serialize data for each plugin,
             # recording which plugins cause exceptions.
             _L().debug('Search for plugin(s) causing exception')
-            for plugin_name_ij, plugin_data_ij in step_i.iteritems():
+            for plugin_name_ij, plugin_data_ij in step_i.items():
                 try:
                     serialize_func(plugin_data_ij)
-                except Exception, exception:
+                except Exception as exception:
                     exception_step_i = {'step': i,
                                         'error': str(exception),
                                         'plugin': plugin_name_ij,
@@ -635,8 +636,8 @@ def protocol_dict_transform_plugin_data(protocol_dict, transform_func,
 
     protocol_dict['plugin_data'] = transform_func(protocol_dict
                                                   .get('plugin_data', {}))
-    protocol_dict['steps'] = map(transform_func,
-                                 protocol_dict['steps'])
+    protocol_dict['steps'] = list(map(transform_func,
+                                 protocol_dict['steps']))
 
     if not inplace:
         return protocol_dict
@@ -688,14 +689,14 @@ class Protocol():
             try:
                 out = pickle.load(f)
                 logger.debug("Loaded object from pickle.")
-            except Exception, e:
+            except Exception as e:
                 logger.debug("Not a valid pickle file. %s." % e)
         if out is None:
             with open(filename, 'rb') as f:
                 try:
                     out = yaml.load(f)
                     logger.debug("Loaded object from YAML file.")
-                except Exception, e:
+                except Exception as e:
                     logger.debug("Not a valid YAML file. %s." % e)
         if out is None:
             raise TypeError
@@ -730,7 +731,7 @@ class Protocol():
             '''
             try:
                 return pickle.loads(value)
-            except Exception, e:
+            except Exception as e:
                 logger.debug('Error decoding: `%s`', value, exc_info=True)
                 if 'No module named indexes.base' in str(e):
                     if 'pandas.core.indexes' in value:
@@ -755,18 +756,18 @@ class Protocol():
                                       'dmf_device_controller.')
                 return yaml.load(value)
 
-        for k, v in out.plugin_data.items():
+        for k, v in list(out.plugin_data.items()):
             try:
                 out.plugin_data[k] = _decode(v)
-            except Exception, e:
+            except Exception as e:
                 logger.error('Error decoding plugin data for `%s`: `%s`', k, v,
                              exc_info=True)
 
         for i in range(len(out)):
-            for k, v in out[i].plugin_data.items():
+            for k, v in list(out[i].plugin_data.items()):
                 try:
                     out[i].plugin_data[k] = _decode(v)
-                except Exception, e:
+                except Exception as e:
                         logger.error('Error decoding plugin data for step %d, '
                                      '`%s`: `%s`', i, k, v, exc_info=True)
 
@@ -783,11 +784,11 @@ class Protocol():
             del out.filename
 
         # convert plugin data objects to strings
-        for k, v in out.plugin_data.items():
+        for k, v in list(out.plugin_data.items()):
             out.plugin_data[k] = pickle.dumps(v, -1)
 
         for step in out.steps:
-            for k, v in step.plugin_data.items():
+            for k, v in list(step.plugin_data.items()):
                 step.plugin_data[k] = pickle.dumps(v, -1)
 
         with open(filename, 'wb') as f:
@@ -893,7 +894,7 @@ class Protocol():
         --------
         :meth:`to_json`, :meth:`to_dict`, :meth:`to_ndjson`
         '''
-        if isinstance(istream, types.StringTypes):
+        if isinstance(istream, (str,)):
             # Assume input is JSON serialized protocol string.
             load_func = json.loads
         else:
@@ -940,7 +941,7 @@ class Protocol():
         '''
         try:
             return protocol_to_ndjson(self, ostream=ostream)
-        except SerializationError, exception:
+        except SerializationError as exception:
             if not ignore_errors:
                 raise
             else:
@@ -978,7 +979,7 @@ class Protocol():
         .. _`ndjson`: http://ndjson.org/
         .. _`specification`: http://specs.frictionlessdata.io/ndjson/
         '''
-        if isinstance(istream, types.StringTypes):
+        if isinstance(istream, (str,)):
             # Assume input is new-line delimited JSON serialized protocol
             # string.
             istream = StringIO.StringIO(istream)
@@ -1009,10 +1010,10 @@ class Protocol():
                                      version)
         elif version < Version.fromstring(self.class_version):
             if version < Version(0, 1):
-                for k, v in self.plugin_data.items():
+                for k, v in list(self.plugin_data.items()):
                     self.plugin_data[k] = yaml.dump(v)
                 for step in self.steps:
-                    for k, v in step.plugin_data.items():
+                    for k, v in list(step.plugin_data.items()):
                         step.plugin_data[k] = yaml.dump(v)
                 self.version = str(Version(0, 1))
                 logger.debug('upgrade to version %s', self.version)
@@ -1064,8 +1065,8 @@ class Protocol():
             values = [Step()] * count
         for value in values[::-1]:
             self.insert_step(step_number, value, notify=False)
-        emit_signal('on_steps_inserted', args=range(step_number, step_number +
-                                                    len(values)))
+        emit_signal('on_steps_inserted', args=list(range(step_number, step_number +
+                                                    len(values))))
 
     def insert_step(self, step_number=None, value=None, notify=True):
         from .app_context import get_app
@@ -1140,8 +1141,6 @@ class Step(object):
         if logger.getEffectiveLevel() <= logging.DEBUG:
             caller = caller_name(skip=2)
             logger.debug('caller: %s', caller)
-            map(logger.debug, ('plugin: `%s`, data:\n%s' %
-                               (plugin_name,
-                                pprint.pformat(data)))
-                .splitlines())
+            for line in f'plugin: {plugin_name}, data:\n{pprint.pformat(data)}'.splitlines():
+                logger.debug(line)
         self.plugin_data[plugin_name] = data

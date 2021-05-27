@@ -64,7 +64,8 @@ class DmfDeviceController(SingletonPlugin, AppDataController):
                 if 'device_directory' in values:
                     self.apply_device_dir(values['device_directory'])
         except (Exception,):
-            map(_L().info, traceback.format_exc().splitlines())
+            for line in traceback.format_exc().splitlines():
+                _L().info(line)
             raise
 
     def apply_device_dir(self, device_directory):
@@ -124,7 +125,7 @@ directory)?''' % (device_directory, self.previous_device_dir))
         app.dmf_device_controller = self
         defaults = self.get_default_app_options()
         data = app.get_data(self.name)
-        for k, v in defaults.items():
+        for k, v in list(defaults.items()):
             if k not in data:
                 data[k] = v
         app.set_data(self.name, data)
@@ -201,7 +202,7 @@ directory)?''' % (device_directory, self.previous_device_dir))
                                    ' device format.  Open in Inkscape to '
                                    'verify scale and adjacent electrode '
                                    'connections.')
-                except Exception, e:
+                except Exception as e:
                     logger.error('Error importing device. %s', e,
                                  exc_info=True)
                 return
@@ -238,7 +239,7 @@ directory)?''' % (device_directory, self.previous_device_dir))
                 # Inform user that device was copied from original location
                 # into MicroDrop devices directory.
                 pgh.ui.dialogs.info('Device imported successfully',
-                                    long='New device copied into MicroDrop '
+                                    int='New device copied into MicroDrop '
                                     'devices directory:\n{}'.format(file_path),
                                     parent=app.main_window_controller.view)
                 logger.info('[DmfDeviceController].load_device: Copied new '
@@ -377,7 +378,7 @@ directory)?''' % (device_directory, self.previous_device_dir))
         if response == gtk.RESPONSE_OK:
             try:
                 self.import_device(filename)
-            except Exception, e:
+            except Exception as e:
                 _L().error('Error importing device. %s', e, exc_info=True)
 
     def import_device(self, input_device_path):
